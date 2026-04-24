@@ -6,6 +6,7 @@ from .signal_strategy import (
     TopkDropoutStrategy,
     WeightStrategyBase,
     EnhancedIndexingStrategy,
+    EqualWeightTopKStrategy,
 )
 
 from .rule_strategy import (
@@ -20,6 +21,7 @@ __all__ = [
     "TopkDropoutStrategy",
     "WeightStrategyBase",
     "EnhancedIndexingStrategy",
+    "EqualWeightTopKStrategy",
     "TWAPStrategy",
     "SBBStrategyBase",
     "SBBStrategyEMA",
