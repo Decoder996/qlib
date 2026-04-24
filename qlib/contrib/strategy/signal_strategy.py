@@ -520,3 +520,41 @@ class EnhancedIndexingStrategy(WeightStrategyBase):
             self.logger.info("total holding weight: {:.6f}".format(weight.sum()))
 
         return target_weight_position
+
+
+class EqualWeightTopKStrategy(WeightStrategyBase):
+    """Equal-weight portfolio on the top-K names by model score.
+
+    Each rebalance, the strategy ranks instruments by the latest prediction score,
+    selects up to ``topk`` symbols with the highest scores, and assigns each the
+    same target weight so that the selected weights sum to one before ``risk_degree``
+    is applied by the order generator.
+
+    This complements ``TopkDropoutStrategy`` (gradual rotation) with a simpler
+    full-refresh equal-weight construction that is easy to interpret and tune.
+    """
+
+    def __init__(self, *, topk: int, **kwargs):
+        """
+        Parameters
+        ----------
+        topk : int
+            Maximum number of stocks to hold with equal weight.
+        """
+        super().__init__(**kwargs)
+        self.topk = topk
+
+    def generate_target_weight_position(self, score, current, trade_start_time, trade_end_time):
+        if isinstance(score, pd.DataFrame):
+            score = score.iloc[:, 0]
+        score = score.dropna()
+        if score.empty:
+            return None
+
+        ranked = score.sort_values(ascending=False)
+        picked = ranked.index[: self.topk]
+        n = len(picked)
+        if n == 0:
+            return None
+        w = 1.0 / n
+        return {sid: w for sid in picked}
